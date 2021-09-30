@@ -1,5 +1,9 @@
 pacman::p_load(tidyverse, olsrr, forecast, corrr, caret, GGally,
-               lmtest, car, rsample, class, lime, reshape2, ggpubr)
+               lmtest, car, rsample, class, lime, reshape2, ggpubr, usethis)
+
+#use_github(protocol = 'https', auth_token = Sys.getenv("GITHUB_PAT"))
+
+#test change
 
 setwd('~/R/DANA-4830/Assignment/Pancreatitis')
 
@@ -7,7 +11,7 @@ df <- read.csv('data/APNotCleaned.csv')
 wdf <- df ## Setting working dataframe for data screening @ reset point @
 
 ##### Data Screening #####
-wdf <- rename(wdf, ID = ï..ID,
+wdf <- rename(wdf, ID = names(df)[1],
               vv_reason1 = vv_reason_1,
               dt_pex_ranson_s_lan1 = dt_pex_ranson_s_lan3,
               stomachache = daubung,
