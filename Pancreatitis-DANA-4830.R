@@ -1,10 +1,6 @@
 pacman::p_load(tidyverse, olsrr, forecast, corrr, caret, GGally,
                lmtest, car, rsample, class, lime, reshape2, ggpubr, usethis)
 
-#use_github(protocol = 'https', auth_token = Sys.getenv("GITHUB_PAT"))
-
-#test change
-
 setwd('~/R/DANA-4830/Assignment/Pancreatitis')
 
 df <- read.csv('data/APNotCleaned.csv')
