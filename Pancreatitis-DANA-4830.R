@@ -259,7 +259,19 @@ ggplot(wdf, aes(Gender, ts_ruou_nam_ml)) + geom_boxplot()+ stat_summary(
 )
 
 table(wdf$ls_tt_alob_t0) # Symptom Abdominal pressure at t0
-ggplot(wdf, aes(y=ls_tt_alob_t0)) +  geom_boxplot()
+#Box Plot
+ggplot(wdf, aes(Gender, ls_tt_alob_t0)) +  geom_boxplot()+ stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Abdominal Pressure", y = "Abdominal Pressure at T0")
+#Histogram
+(ggplot(wdf, aes(x=ls_tt_alob_t0, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
+  + scale_color_manual(values = c("blue", "red")) 
+  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
+  + labs(title="Abdominal Pressure",y="Count")
+)
+
 
 table(wdf$ls_tt_bmi_t0) # Symptom BMI measure t0
 ggplot(wdf, aes(Gender, ls_tt_bmi_t0)) + geom_boxplot() # Clearly an outlier at y = 258
@@ -427,6 +439,3 @@ gg_miss_upset(dfs$dt[1:9], nsets = 9)
 ##### Final Dataset #####
 fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
 write.csv(fdf, 'data/cleaned_data.csv')
-
-
-#testestestestes#
