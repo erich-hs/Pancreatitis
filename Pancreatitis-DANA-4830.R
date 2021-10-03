@@ -269,7 +269,7 @@ ggplot(wdf, aes(Gender, ls_tt_alob_t0)) +  geom_boxplot()+ stat_summary(
 (ggplot(wdf, aes(x=ls_tt_alob_t0, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
   + scale_color_manual(values = c("blue", "red")) 
   + scale_fill_manual(values = c("#0055ff", "#ff006a"))
-  + labs(title="Abdominal Pressure",y="Count")
+  + labs(title="Abdominal Pressure",x="Abdominal Pressure",y="Count")
 )
 
 
