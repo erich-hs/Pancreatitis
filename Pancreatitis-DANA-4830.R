@@ -47,9 +47,9 @@ wdf$vv_reason3 <- factor(wdf$vv_reason3,
 table(wdf$vv_Others) # Hospital admission reason 4
 # Grouped similar categories
 wdf$vv_Others <- factor(wdf$vv_Others,
-                        levels = c("Dau bung man suon (P)", "dau bung quanh ron", "ha suon=man suon", "kho tho",
+                        levels = c("Dau bung man suon (P)", "dau bung quanh ron", "ha suon=man suon", 
                                    "kho tho", "vtc tang triglycerid", "VTC tang triglycerid , gian dai be than do soi NQ"),
-                        labels = c("Abdominal Pain", "Abdominal Pain", "Lower Ribs", "Shortness of Breath",
+                        labels = c("Abdominal Pain", "Abdominal Pain", "Lower Ribs", 
                                    "Shortness of Breath", "VTC Increase Triglycerides", "VTC Increase Triglycerides"))
 
 table(wdf$ts_giadinh) # Hereditary information
@@ -210,22 +210,61 @@ wdf$dead <- factor(wdf$dead,
 table(wdf$complication)
 
 ##### Numeric Variables #####
+
 table(wdf$rv_ngaydt) # Duration of hospital stay in days
-ggplot(wdf, aes(Gender, rv_ngaydt)) + geom_boxplot()
+#Box Plot
+ggplot(wdf, aes(Gender, rv_ngaydt)) + geom_boxplot()  + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun.y = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Duration in Hospital (days)", y = "Duration (days)")
+
+#Histogram
+(ggplot(wdf, aes(x=rv_ngaydt, color= Gender, fill = Gender)) 
+  + geom_histogram(position="identity", alpha=0.5) 
+  + scale_color_manual(values = c("blue", "red")) 
+  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
+  + labs(title="Duration in Hospital (days)", x="Days", y="Count")
+)
+
 
 table(wdf$ts_ruou_nam) # Drinking problem - Unit unknown
-ggplot(wdf, aes(Gender, ts_ruou_nam)) + geom_boxplot()
+#Box Plot
+ggplot(wdf, aes(Gender, ts_ruou_nam)) + geom_boxplot()+ stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Drinking Problem")
+
+#Histogram
+(ggplot(wdf, aes(x=ts_ruou_nam, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
+  + scale_color_manual(values = c("blue", "red")) 
+  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
+  + labs(title="Drinking Problem",y="Count")
+)
+
 
 table(wdf$ts_ruou_nam_ml) # Drinking problem - mililiters?
-ggplot(wdf, aes(Gender, ts_ruou_nam_ml)) + geom_boxplot()
+#Box Plot
+ggplot(wdf, aes(Gender, ts_ruou_nam_ml)) + geom_boxplot()+ stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Drinking Problem (ml)", y = "Drinking Problem (ml)")
+#Histogram
+(ggplot(wdf, aes(x=ts_ruou_nam_ml, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
+  + scale_color_manual(values = c("blue", "red")) 
+  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
+  + labs(title="Drinking Problem (ml)",y="Count")
+)
 
-table(wdf$ls_tt_alob_t0) # Symptom without description
+table(wdf$ls_tt_alob_t0) # Symptom Abdominal pressure at t0
 ggplot(wdf, aes(y=ls_tt_alob_t0)) +  geom_boxplot()
 
-table(wdf$ls_tt_bmi_t0) # Symptom without description - Body Mass Index?
+table(wdf$ls_tt_bmi_t0) # Symptom BMI measure t0
 ggplot(wdf, aes(Gender, ls_tt_bmi_t0)) + geom_boxplot() # Clearly an outlier at y = 258
 
-table(wdf$ls_tn_mach_t0) # Symptom without description - Pulse/Heart rate?
+table(wdf$ls_tn_mach_t0) # Symptom Heartbeat at t0
 ggplot(wdf, aes(Gender, ls_tn_mach_t0)) + geom_boxplot()
 
 table(wdf$ls_tn_nhiet_t0) # Body Temperature
