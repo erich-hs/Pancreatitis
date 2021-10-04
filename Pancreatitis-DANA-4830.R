@@ -156,8 +156,9 @@ wdf$cls_sa_mat_t0 <- factor(wdf$cls_sa_mat_t0,
                             labels = c("BT", "Polyps"))
 
 table(wdf$cls_sa_ketluan_t0) # Ultrasound Conclusion
+wdf$cls_sa_ketluan_t0[8] # Problematic spelling with unwanted characters
 wdf$cls_sa_ketluan_t0 <- factor(wdf$cls_sa_ketluan_t0,
-                                levels = c("TD VTC", "TDVTC", "vtc", "VTC", "vtc hoai tu", "VTC hoai tu", "VTC ph?^s????",
+                                levels = c("TD VTC", "TDVTC", "vtc", "VTC", "vtc hoai tu", "VTC hoai tu", wdf$cls_sa_ketluan_t0[8],
                                            "vtc phu", "VTC phu", "vtc the phu", "VTC the phu"),
                                 labels = c("TD VTC", "TD VTC", "VTC", "VTC", "Necrotic VTC", "Necrotic VTC", "VTC",
                                            "Sub VTC", "Sub VTC", "VTC Cover", "VTC Cover"))
