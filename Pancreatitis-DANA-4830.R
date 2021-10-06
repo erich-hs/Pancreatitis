@@ -220,13 +220,8 @@ ggplot(wdf, aes(Gender, rv_ngaydt)) + geom_boxplot()  + stat_summary(
   hjust = -1
 ) + labs(title="Duration in Hospital (days)", y = "Duration (days)")
 
-#Histogram
-(ggplot(wdf, aes(x=rv_ngaydt, color= Gender, fill = Gender)) 
-  + geom_histogram(position="identity", alpha=0.5) 
-  + scale_color_manual(values = c("blue", "red")) 
-  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
-  + labs(title="Duration in Hospital (days)", x="Days", y="Count")
-)
+#replacing the duration of the hospital in days for this observation from 2 to 3. Since this patient has all the records for the exams of 72 hours. 
+wdf$rv_ngaydt[112] <- 3
 
 
 table(wdf$ts_ruou_nam) # Drinking problem - Unit unknown
@@ -237,13 +232,6 @@ ggplot(wdf, aes(Gender, ts_ruou_nam)) + geom_boxplot()+ stat_summary(
   hjust = -1
 ) + labs(title="Drinking Problem")
 
-#Histogram
-(ggplot(wdf, aes(x=ts_ruou_nam, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
-  + scale_color_manual(values = c("blue", "red")) 
-  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
-  + labs(title="Drinking Problem",y="Count")
-)
-
 
 table(wdf$ts_ruou_nam_ml) # Drinking problem - mililiters?
 #Box Plot
@@ -252,59 +240,151 @@ ggplot(wdf, aes(Gender, ts_ruou_nam_ml)) + geom_boxplot()+ stat_summary(
   fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
   hjust = -1
 ) + labs(title="Drinking Problem (ml)", y = "Drinking Problem (ml)")
-#Histogram
-(ggplot(wdf, aes(x=ts_ruou_nam_ml, color= Gender, fill = Gender)) + geom_histogram(position="identity", alpha=0.5) 
-  + scale_color_manual(values = c("blue", "red")) 
-  + scale_fill_manual(values = c("#0055ff", "#ff006a"))
-  + labs(title="Drinking Problem (ml)",y="Count")
-)
+
 
 table(wdf$ls_tt_alob_t0) # Symptom Abdominal pressure at t0
-ggplot(wdf, aes(y=ls_tt_alob_t0)) +  geom_boxplot()
+ggplot(wdf, aes(Gender, y=ls_tt_alob_t0)) +  geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom Abdominal pressure at t0", y = "Abdominal pressure at t0")
+
 
 table(wdf$ls_tt_bmi_t0) # Symptom BMI measure t0
-ggplot(wdf, aes(Gender, ls_tt_bmi_t0)) + geom_boxplot() # Clearly an outlier at y = 258
+ggplot(wdf, aes(Gender, ls_tt_bmi_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom BMI measure t0", y = "BMI measure t0")
+# Clearly an outlier at y = 258, the correct input should be 25.8 since its normal range is 18.5 - 24.9
+wdf$ls_tt_bmi_t0[148] <- 25.8
+
+#Cleaned Boxplot
+ggplot(wdf, aes(Gender, ls_tt_bmi_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom BMI measure t0 (Clean)", y = "BMI measure t0")
+#The outliers in this case mean that the patient has 30.0 or higher BMI, it falls within the obese range.
+
 
 table(wdf$ls_tn_mach_t0) # Symptom Heartbeat at t0
-ggplot(wdf, aes(Gender, ls_tn_mach_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_tn_mach_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom Heartbeat at t0", y = "Heartbeat at t0")
+#Outlier 158, is from a 50 year old man, high heartbeat rate for his age, although possible.
+
 
 table(wdf$ls_tn_nhiet_t0) # Body Temperature
-ggplot(wdf, aes(Gender, ls_tn_nhiet_t0)) + geom_boxplot() # Clearly an outlier at y = 366
+ggplot(wdf, aes(Gender, ls_tn_nhiet_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom Body Temperature at t0", y = "Body Temperaturet at t0")
+# Clearly an outlier at y = 366 and 3.7
+
+wdf$ls_tn_nhiet_t0[164] <- 36.6
+wdf$ls_tn_nhiet_t0[61] <- 37
+
+ggplot(wdf, aes(Gender, ls_tn_nhiet_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Symptom Body Temperature at t0 (Clean)", y = "Body Temperaturet at t0")
+
 
 table(wdf$ls_tn_spo2_t0) # Saturation of peripheral oxygen
-ggplot(wdf, aes(Gender, ls_tn_spo2_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_tn_spo2_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Saturation of peripheral oxygen at t0", y = "Saturation of peripheral oxygen")
+#Values under 90 are considered low, but possible, outliers kept
 
 table(wdf$ls_tn_cvp_t0) # Center venus pressure
-ggplot(wdf, aes(Gender, ls_tn_cvp_t0)) + geom_boxplot() # Possible outlier at y = 99
+ggplot(wdf, aes(Gender, ls_tn_cvp_t0)) + geom_boxplot()+ stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="Center venus pressure at t0", y = "Center venus pressure")
+# Possible outliers at y = 99. Expected range 3 - 10 mmHg. Drop this variable?
 
-table(wdf$ls_diem_apache_t0) # APACHE 2 score at T0
+table(wdf$ls_diem_apache_t0) # APACHE 2 score at t0
 # Range 0 to 71: higher number = more severe condition
-ggplot(wdf, aes(Gender, ls_diem_apache_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_diem_apache_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="APACHE 2 score at t0", y = "APACHE 2 score")
+#16 is a possible value. Maintained
+
 
 table(wdf$ls_diem_ranson_t0) # RANSON score at T0
 # Range 0 to 8:
-# If the score ??? 3, severe pancreatitis likely.
+# A score of 3 or greater predicts severe acute pancreatitis and possible mortality
 # If the score < 3, severe pancreatitis is unlikely
-ggplot(wdf, aes(Gender, ls_diem_ranson_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_diem_ranson_t0)) + geom_boxplot()+ stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title=" RANSON score at t0", y = " RANSON score")
+#Possible values, outliers maintained.
+
 
 table(wdf$ls_diem_ct_t0) # CTSI score at T0
 # Range 0 to 10: higher number = higher pancreatic necrosis
-ggplot(wdf, aes(Gender, ls_diem_ct_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_diem_ct_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="CTSI score at t0", y = "CTSI score")
+#Possible values, outliers maintained.
+
 
 table(wdf$ls_diem_imrie_t0) # IMRIE score at T0
 # Range 0 to 8: higher number = more severe pancreatitis
-ggplot(wdf, aes(Gender, ls_diem_imrie_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_diem_imrie_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="IMRIE score at t0", y = "IMRIE score")
+#Possible values, outliers maintained.
+
 
 table(wdf$ls_diem_sofa_t0) # SOFA score at T0
 # Range 0 to 24: higher number = higher organ failure assessment - higher chance of mortality
-ggplot(wdf, aes(Gender, ls_diem_sofa_t0)) + geom_boxplot()
+ggplot(wdf, aes(Gender, ls_diem_sofa_t0)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="SOFA score at t0", y = "SOFA score")
+#Possible values, outliers maintained.
+
 
 table(wdf$cls_ct_ctscore_lan1) # CTSI score with Computer Tomography
 # Range 0 to 10: higher number = higher pancreatic necrosis
 wdf$cls_ct_ctscore_lan1 <- as.numeric(wdf$cls_ct_ctscore_lan1)
-ggplot(wdf, aes(Gender, cls_ct_ctscore_lan1)) + geom_boxplot() # Possible outlier at y = 23
+ggplot(wdf, aes(Gender, cls_ct_ctscore_lan1)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="CTSI score with Computer Tomography", y = "CTSI score")
+# Possible outlier at y = 23 and ID59 = e = 4
+wdf$cls_ct_ctscore_lan1[59] <- 4
+wdf$cls_ct_ctscore_lan1[132] <- NA
 
-# cls_sh_ka_tn6: tn6 meaning?
+#Clean Boxplot
+ggplot(wdf, aes(Gender, cls_ct_ctscore_lan1)) + geom_boxplot() + stat_summary(
+  aes(label = round(stat(y), 1)), geom = "text", 
+  fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+  hjust = -1
+) + labs(title="CTSI score with Computer Tomography (Clean)", y = "CTSI score")
+#Possible values, outliers maintained.
+
+
+# cls_sh_ka_tn6: tn6 meaning - Drop?
 table(wdf$cls_sh_ka_tn6)
 ggplot(wdf, aes(Gender, cls_sh_ka_tn6)) + geom_boxplot()
 
@@ -428,3 +508,5 @@ gg_miss_upset(dfs$dt[1:9], nsets = 9)
 ##### Final Dataset #####
 fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
 write.csv(fdf, 'data/cleaned_data.csv')
+
+
