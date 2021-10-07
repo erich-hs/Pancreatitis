@@ -211,6 +211,10 @@ wdf$dead <- factor(wdf$dead,
 table(wdf$complication)
 
 ##### Numeric Variables #####
+#Changing ID 112 dt_pex_hdl_t_lan1 to NA and column from categorical to numeric
+wdf$dt_pex_hdl_t_lan1[112] <- NA
+wdf$dt_pex_hdl_t_lan1 <- as.numeric(wdf$dt_pex_hdl_t_lan1)
+
 
 table(wdf$rv_ngaydt) # Duration of hospital stay in days
 #Box Plot
@@ -509,14 +513,14 @@ gg_miss_upset(dfs$dt[1:9], nsets = 9)
 fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
 write.csv(fdf, 'data/cleaned_data.csv')
 
-x1 <- colnames(dfs$cls)
+attach(dfs)
 
-
+x1 <- colnames(dfs$dt)
 for(i in x1){
-   ggplot(wdf,aes(Gender,i)) + geom_boxplot() + stat_summary(
-   aes(label = round(stat(y), 1)), geom = "text", 
+  print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
+    aes(label = round(stat(y), 1)), geom = "text", 
     fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
     hjust = -1
-  ) + labs(title="test title", y = "test y axis")
-}
+  ) + labs(y =i))
+  }
 
