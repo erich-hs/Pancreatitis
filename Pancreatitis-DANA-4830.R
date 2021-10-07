@@ -509,4 +509,14 @@ gg_miss_upset(dfs$dt[1:9], nsets = 9)
 fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
 write.csv(fdf, 'data/cleaned_data.csv')
 
+x1 <- colnames(dfs$cls)
+
+
+for(i in x1){
+   ggplot(wdf,aes(Gender,i)) + geom_boxplot() + stat_summary(
+   aes(label = round(stat(y), 1)), geom = "text", 
+    fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+    hjust = -1
+  ) + labs(title="test title", y = "test y axis")
+}
 
