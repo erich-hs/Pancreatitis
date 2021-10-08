@@ -204,11 +204,11 @@ wdf$pex <- factor(wdf$pex,
                   labels = c('Standard Treatment', 'PEX Treatment'))
 
 table(wdf$dead) ## Song = ???
-wdf$dead <- factor(wdf$dead,
-                   levels = c('Song'),
-                   labels = c('Song'))
+wdf <- select(wdf, -c(dead)) # Removing dead variable
 
 table(wdf$complication)
+wdf$complication[is.na(wdf$complication)] <- 0 # Assigning 0 to NAs to convert to a binary variable
+
 
 ##### Numeric Variables #####
 #Changing ID 122 dt_pex_hdl_t_lan1 to NA and column from categorical to numeric
@@ -216,19 +216,9 @@ wdf$dt_pex_hdl_t_lan1[122] <- NA
 wdf$dt_pex_hdl_t_lan1 <- as.numeric(wdf$dt_pex_hdl_t_lan1)
 
 #Changing ID's dt_pex_ldl_t_lan1 to NA and column from categorical to numeric
-wdf$dt_pex_ldl_t_lan1[46] <- NA
-wdf$dt_pex_ldl_t_lan1[19] <- NA
-wdf$dt_pex_ldl_t_lan1[70] <- NA
-wdf$dt_pex_ldl_t_lan1[118] <- NA
-wdf$dt_pex_ldl_t_lan1[151] <- NA
-wdf$dt_pex_ldl_t_lan1[78] <- NA
-wdf$dt_pex_ldl_t_lan1[116] <- NA
-wdf$dt_pex_ldl_t_lan1[89] <- NA
-wdf$dt_pex_ldl_t_lan1[136] <- NA
-wdf$dt_pex_ldl_t_lan1[55] <- NA
-wdf$dt_pex_ldl_t_lan1[122] <- NA
-wdf$dt_pex_ldl_t_lan1[123] <- NA
-wdf$dt_pex_ldl_t_lan1[121] <- NA
+table(wdf$dt_pex_ldl_t_lan1)
+wdf$dt_pex_ldl_t_lan1[wdf$dt_pex_ldl_t_lan1 == 'duc'] <- NA
+wdf$dt_pex_ldl_t_lan1[wdf$dt_pex_ldl_t_lan1 == 'ht duc'] <- NA
 wdf$dt_pex_ldl_t_lan1 <- as.numeric(wdf$dt_pex_ldl_t_lan1)
 
 #Changing ID's dt_pex_sauvv to its respective and column from categorical to numeric
@@ -254,6 +244,7 @@ wdf$dt_pex_sauvv[121] <- 8
 wdf$dt_pex_sauvv <- as.numeric(wdf$dt_pex_sauvv)
 
 table(wdf$rv_ngaydt) # Duration of hospital stay in days
+
 #Box Plot
 ggplot(wdf, aes(Gender, rv_ngaydt)) + geom_boxplot()  + stat_summary(
   aes(label = round(stat(y), 1)), geom = "text", 
@@ -263,7 +254,6 @@ ggplot(wdf, aes(Gender, rv_ngaydt)) + geom_boxplot()  + stat_summary(
 
 #replacing the duration of the hospital in days for this observation from 2 to 3. Since this patient has all the records for the exams of 72 hours. 
 wdf$rv_ngaydt[112] <- 3
-
 
 table(wdf$ts_ruou_nam) # Drinking problem - Unit unknown
 #Box Plot
@@ -432,16 +422,6 @@ table(wdf$cls_sh_ka_tn6)
 ggplot(wdf, aes(Gender, cls_sh_ka_tn6)) + geom_boxplot()
 
 
-#table(wdf$dt_pex_sauvv)
-#function <- clear_sauvv(i) {
-#  substr(i, start = 1, stop = )
-#}
-#find('h', wdf$dt_pex_sauvv[5])
-
-
-
-
-
 ##### Naniar NA plots #####
 ### Subsetting ###
 dfs <- list() # Defining master list of dataframes
@@ -582,19 +562,6 @@ for(i in colls){
   ) + labs(y =i))
 }
 
-<<<<<<< HEAD
-#### Box plots for ts
-colts <- colnames(dfs$ts)
-for(i in colts){
-  print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
-    aes(label = round(stat(y), 1)), geom = "text", 
-    fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
-    hjust = -1
-  ) + labs(y =i))
-}
-=======
-detach(dfs)
-
 boxplot(select(dfs$dt, c(1:9)))
 boxplot(select(dfs$dt, c(10:12)))
 boxplot(select(dfs$dt, c(14:17)))
@@ -606,6 +573,3 @@ ggplot(cls.melt) +
   geom_boxplot(aes(ID, value, color = variable)) +
   labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
   theme_bw()
-
-
->>>>>>> e505b9a92ce16d25b4df1716cf48c1db2ca90303
