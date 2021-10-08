@@ -582,6 +582,7 @@ for(i in colls){
   ) + labs(y =i))
 }
 
+<<<<<<< HEAD
 #### Box plots for ts
 colts <- colnames(dfs$ts)
 for(i in colts){
@@ -591,3 +592,20 @@ for(i in colts){
     hjust = -1
   ) + labs(y =i))
 }
+=======
+detach(dfs)
+
+boxplot(select(dfs$dt, c(1:9)))
+boxplot(select(dfs$dt, c(10:12)))
+boxplot(select(dfs$dt, c(14:17)))
+boxplot(select(dfs$dt, c(19:30)))
+
+cls.melt <- melt(dfs$cls, id.vars = 'ID',
+                 measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+ggplot(cls.melt) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+
+>>>>>>> e505b9a92ce16d25b4df1716cf48c1db2ca90303
