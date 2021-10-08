@@ -211,10 +211,47 @@ wdf$dead <- factor(wdf$dead,
 table(wdf$complication)
 
 ##### Numeric Variables #####
-#Changing ID 112 dt_pex_hdl_t_lan1 to NA and column from categorical to numeric
-wdf$dt_pex_hdl_t_lan1[112] <- NA
+#Changing ID 122 dt_pex_hdl_t_lan1 to NA and column from categorical to numeric
+wdf$dt_pex_hdl_t_lan1[122] <- NA
 wdf$dt_pex_hdl_t_lan1 <- as.numeric(wdf$dt_pex_hdl_t_lan1)
 
+#Changing ID's dt_pex_ldl_t_lan1 to NA and column from categorical to numeric
+wdf$dt_pex_ldl_t_lan1[46] <- NA
+wdf$dt_pex_ldl_t_lan1[19] <- NA
+wdf$dt_pex_ldl_t_lan1[70] <- NA
+wdf$dt_pex_ldl_t_lan1[118] <- NA
+wdf$dt_pex_ldl_t_lan1[151] <- NA
+wdf$dt_pex_ldl_t_lan1[78] <- NA
+wdf$dt_pex_ldl_t_lan1[116] <- NA
+wdf$dt_pex_ldl_t_lan1[89] <- NA
+wdf$dt_pex_ldl_t_lan1[136] <- NA
+wdf$dt_pex_ldl_t_lan1[55] <- NA
+wdf$dt_pex_ldl_t_lan1[122] <- NA
+wdf$dt_pex_ldl_t_lan1[123] <- NA
+wdf$dt_pex_ldl_t_lan1[121] <- NA
+wdf$dt_pex_ldl_t_lan1 <- as.numeric(wdf$dt_pex_ldl_t_lan1)
+
+#Changing ID's dt_pex_sauvv to its respective and column from categorical to numeric
+wdf$dt_pex_sauvv[24] <- 9
+wdf$dt_pex_sauvv[86] <- 5
+wdf$dt_pex_sauvv[138] <- 23
+wdf$dt_pex_sauvv[39] <- 22
+wdf$dt_pex_sauvv[6] <- 15
+wdf$dt_pex_sauvv[66] <- 12
+wdf$dt_pex_sauvv[139] <- 10
+wdf$dt_pex_sauvv[67] <- 39
+wdf$dt_pex_sauvv[20] <- 19
+wdf$dt_pex_sauvv[122] <- 17
+wdf$dt_pex_sauvv[58] <- 16
+wdf$dt_pex_sauvv[150] <- 16
+wdf$dt_pex_sauvv[75] <- 14
+wdf$dt_pex_sauvv[52] <- 11
+wdf$dt_pex_sauvv[125] <- 11
+wdf$dt_pex_sauvv[25] <- 10
+wdf$dt_pex_sauvv[56] <- 0.25
+wdf$dt_pex_sauvv[35] <- 9
+wdf$dt_pex_sauvv[121] <- 8
+wdf$dt_pex_sauvv <- as.numeric(wdf$dt_pex_sauvv)
 
 table(wdf$rv_ngaydt) # Duration of hospital stay in days
 #Box Plot
@@ -313,7 +350,9 @@ ggplot(wdf, aes(Gender, ls_tn_cvp_t0)) + geom_boxplot()+ stat_summary(
   fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
   hjust = -1
 ) + labs(title="Center venus pressure at t0", y = "Center venus pressure")
-# Possible outliers at y = 99. Expected range 3 - 10 mmHg. Drop this variable?
+# Possible outliers at y = 99. Expected range 3 - 10 mmHg. 
+#Drop this variable?
+#wdf = subset(wdf,select = -c(ls_tn_cvp_t0))
 
 table(wdf$ls_diem_apache_t0) # APACHE 2 score at t0
 # Range 0 to 71: higher number = more severe condition
@@ -391,9 +430,6 @@ ggplot(wdf, aes(Gender, cls_ct_ctscore_lan1)) + geom_boxplot() + stat_summary(
 # cls_sh_ka_tn6: tn6 meaning - Drop?
 table(wdf$cls_sh_ka_tn6)
 ggplot(wdf, aes(Gender, cls_sh_ka_tn6)) + geom_boxplot()
-
-
-
 
 
 #table(wdf$dt_pex_sauvv)
@@ -513,14 +549,45 @@ gg_miss_upset(dfs$dt[1:9], nsets = 9)
 fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
 write.csv(fdf, 'data/cleaned_data.csv')
 
-attach(dfs)
 
-x1 <- colnames(dfs$dt)
-for(i in x1){
+#### Box plots for Dt
+coldt <- colnames(dfs$dt)
+for(i in coldt){
   print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
     aes(label = round(stat(y), 1)), geom = "text", 
     fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
     hjust = -1
   ) + labs(y =i))
-  }
+}
 
+
+#### Box plots for cls
+colcls <- colnames(dfs$cls)
+for(i in colcls){
+  print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
+    aes(label = round(stat(y), 1)), geom = "text", 
+    fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+    hjust = -1
+  ) + labs(y =i))
+}
+
+
+#### Box plots for ls
+colls <- colnames(dfs$ls)
+for(i in colls){
+  print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
+    aes(label = round(stat(y), 1)), geom = "text", 
+    fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+    hjust = -1
+  ) + labs(y =i))
+}
+
+#### Box plots for ts
+colts <- colnames(dfs$ts)
+for(i in colts){
+  print(ggplot(wdf,aes(Gender, wdf[ ,i])) + geom_boxplot()+ stat_summary(
+    aes(label = round(stat(y), 1)), geom = "text", 
+    fun = function(y) { o <- boxplot.stats(y)$out; if(length(o) == 0) NA else o },
+    hjust = -1
+  ) + labs(y =i))
+}
