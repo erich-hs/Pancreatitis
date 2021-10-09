@@ -585,7 +585,7 @@ rm_var1 <- c('dt_pex_ranson_s_lan1', # Only 2 observation
             'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
             'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
             'cls_sh_ca_t0',
-            'dead') # Variables with inconsistent range of values
+            'dead', 'ls_tn_cvp_t0', 'ls_tn_ha_t6') # Variables with inconsistent range of values
 
 rm_var2 <- c('dt_pex_ngaybenh', "dt_pex_tri_t_lan1", "dt_pex_tri_s_lan1", "dt_pex_chol_t_lan1", "dt_pex_chol_s_lan1",
              "dt_pex_ldl_t_lan1", "dt_pex_ldl_s_lan1", "dt_pex_hdl_t_lan1", "dt_pex_apache_t_lan1", "dt_pex_apache_s_lan1",
@@ -627,15 +627,12 @@ wdf$dt_pex_lan[wdf$pex == 'Standard Treatment'] <- 0
 
 x <- wdf$ID[is.na(wdf$cls_sh_tri_t6)]
 for (i in x) {
-  wdf$cls_sh_tri_t6 <- wdf[wdf$ID == i, 'dt_pex_tri_s_lan1']
+  wdf$cls_sh_tri_t6[wdf$ID == i] <- wdf[wdf$ID == i, 'dt_pex_tri_s_lan1']
 }
-
-wdf$cls_sh_tri_t0
-wdf$dt_pex_tri_t_lan1
 
 x <- wdf$ID[is.na(wdf$cls_sh_tri_t0)]
 for (i in x) {
-  wdf$cls_sh_tri_t0 <- wdf[wdf$ID == i, 'dt_pex_tri_t_lan1']
+  wdf$cls_sh_tri_t0[wdf$ID == i] <- wdf[wdf$ID == i, 'dt_pex_tri_t_lan1']
 }
 
 fdf <- select(wdf, -c(rm_var1), -c(rm_var2))
@@ -658,12 +655,64 @@ vis_miss(fdf, show_perc_col = FALSE) +
   coord_flip() +
   facet_grid(fdf$pex) +
   theme_bw()
-# 36.2% of missing values to enter mice, Amelia, and missForest packages
+# 35.4% of missing values to enter mice, Amelia, and missForest packages
 
 ### MICE
-MiceTest <- mice(fdf[-1], m = 1, maxit = 5, seed = 123)
-summary(MiceTest)
-micedf <- complete(MiceTest, 1)
+MiceRun <- mice(fdf[-1], m = 1, maxit = 5, seed = 123)
+summary(MiceRun)
+micedf <- complete(MiceRun, 1)
 
 ### Amelia
-names(fdf)
+# Subsets
+ts_var <- grepl("ts_", names(fdf))
+ls_var <- grepl("\\<ls_", names(fdf))
+cls_var <- grepl("cls_", names(fdf))
+dt_var <- grepl("dt_", names(fdf))
+
+amelia_var <- function(df) {
+  nominal_var <<- names(df[, sapply(df, is.factor)])
+  ordinal_var <<- names(df[, sapply(df, is.integer)])
+}
+
+cpus <- parallel::detectCores() # Verifying number of available CPUs
+
+# ts_ variables
+amelia_var(fdf[ , ts_var])
+str(fdf[ , ts_var])
+AmeliaRun <- amelia(fdf[, ts_var], m = 5, p2s = 2, noms = nominal_var, #ords = ordinal_var,
+                    seed = 123, parallel = 'snow', ncpus = cpus,
+                    empri = 0.8*nrow(fdf[-1]))
+
+# ls_ variables
+amelia_var(fdf[ , ls_var])
+str(fdf[ , ls_var])
+AmeliaRun <- amelia(fdf[, ls_var], m = 5, p2s = 2, ords = ordinal_var,
+                    seed = 123, parallel = 'snow', ncpus = cpus,
+                    empri = 0.8*nrow(fdf[-1]))
+AmeliaRun$imputations[[5]] # Individuals 23 and 92 with no information
+
+# cls_ variables
+# subset 1
+amelia_var(fdf[ , cls_var][1:53])
+str(fdf[ , cls_var][1:53])
+AmeliaRun <- amelia(fdf[, cls_var][1:53], m = 5, p2s = 2, noms = nominal_var, ords = ordinal_var,
+                    seed = 123, parallel = 'snow', ncpus = cpus,
+                    empri = 0.8*nrow(fdf[-1]))
+AmeliaRun$imputations[[5]] # Individual 23 with no information
+
+# subset 2
+amelia_var(fdf[ , cls_var][54:107])
+str(fdf[ , cls_var][54:107])
+AmeliaRun <- amelia(fdf[, cls_var][54:107], m = 5, p2s = 2, ords = ordinal_var,
+                    seed = 123, parallel = 'snow', ncpus = cpus,
+                    empri = 0.8*nrow(fdf[-1]))
+AmeliaRun$imputations[[5]]
+
+# dt_ variables
+amelia_var(fdf[ , dt_var])
+str(fdf[ , dt_var])
+AmeliaRun <- amelia(fdf[, dt_var], m = 5, p2s = 2, ords = c(ordinal_var, 'dt_pex_lan'),
+                    seed = 123, parallel = 'snow', ncpus = cpus,
+                    empri = 0.8*nrow(fdf[-1]))
+AmeliaRun$imputations[[5]]
+
