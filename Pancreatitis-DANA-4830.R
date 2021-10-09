@@ -107,11 +107,14 @@ table(wdf$stomachache) # Stomachache
 wdf$stomachache <- factor(wdf$stomachache,
                       levels = c(0, 1),
                       labels = c("No", "Yes"))
+as.numeric(wdf$stomachache)
 
 table(wdf$vomiting) # Vomiting
 wdf$vomiting <- factor(wdf$vomiting,
                   levels = c(0, 1),
                   labels = c("No", "Yes"))
+as.numeric(wdf$vomiting)
+wdf$vomiting[is.na(wdf$vomiting)] <- 'No' # Assigning 'No' to missing values
 
 table(wdf$ls_cn_bidaitien) # Symptoms of defecation
 wdf$ls_cn_bidaitien <- factor(wdf$ls_cn_bidaitien,
@@ -525,10 +528,6 @@ scatter_fun(dfs$dt$dt_dich_ra_t72, dfs$dt$dt_dich_bilan_t72,
 
 gg_miss_upset(dfs$dt[1:9], nsets = 9)
 
-##### Final Dataset #####
-fdf <- select(wdf, -c(dt_pex_ranson_s_lan1, vv_Others, vv_reason1, vv_reason2, vv_reason3))
-write.csv(fdf, 'data/cleaned_data.csv')
-
 
 #### Box plots for Dt
 coldt <- colnames(dfs$dt)
@@ -573,3 +572,51 @@ ggplot(cls.melt) +
   geom_boxplot(aes(ID, value, color = variable)) +
   labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
   theme_bw()
+
+#### Dataset for Regression Model ####
+## Variables to remove
+rm_var1 <- c('dt_pex_ranson_s_lan1', # Only 2 observation
+            'vv_Others', 'vv_reason1', 'vv_reason2', 'vv_reason3', # Categorical variables without meaningful information
+            'details_ts_giadinh',
+            'ts_vtc', 'ts_vtc_lancuoi',
+            'ls_cn_bidaitien', 'ls_cn_ialong', 'ls_tht_bungchuong', 'ls_tt_lungsuon',
+            'cls_sa_tuy_t0', 'cls_sa_mat_t0', 'cls_sa_ketluan_t0',
+            'cls_ct_tuy_lan1', 'cls_ct_balthazar_lan1',
+            'cls_sh_bil_t0', 'cls_sh_bil_t6', 'cls_sh_bil_t30', 'cls_sh_bil_t72',
+            'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
+            'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
+            'cls_sh_ca_t0') # Variables with inconsistent range of values
+
+rm_var2 <- c('dt_pex_ngaybenh', "dt_pex_tri_t_lan1", "dt_pex_tri_s_lan1", "dt_pex_chol_t_lan1", "dt_pex_chol_s_lan1",
+             "dt_pex_ldl_t_lan1", "dt_pex_ldl_s_lan1", "dt_pex_hdl_t_lan1", "dt_pex_apache_t_lan1", "dt_pex_apache_s_lan1",
+             "dt_pex_ranson_t_lan1", "dt_pex_ranson_s_lan1", "dt_pex_imrie_t_lan1", "dt_pex_imrie_s_lan1",
+             "dt_pex_balthazar_t_lan1", "dt_pex_balthazar_s_lan1", "dt_pex_sofa_t_lan1", "dt_pex_sofa_s_lan1",
+             "dt_pex_alob_t_lan1", "dt_pex_alob_s_lan1") # Removing dt_pex_ variables with MNAR observations for standard treatment patients
+
+### Dealing with MNAR (Missing Not At Random) observations
+# Assigning 0 to t54 and t72 variables, for individuals that stayed less than 3 days in the hospital
+x <- wdf$ID[wdf$rv_ngaydt < 3]
+for (i in x) {
+  wdf[wdf$ID == i, grepl("_t54", names(wdf))] <- 0
+}
+
+for (i in x) {
+  wdf[wdf$ID == i, grepl("_t72", names(wdf))] <- 0
+}
+
+fdf <- select(wdf, -c(rm_var1), -c(rm_var2))
+names(fdf)
+str(fdf)
+table(fdf$cls_sh_ca_t0)
+vis_miss(fdf)
+
+pMiss <- function(x){round(sum(is.na(x))/length(x)*100, 2)}
+perc_miss <- sapply(fdf, pMiss) # Identifying missing values percentage
+perc_miss_75 <- names(perc_miss[perc_miss > 75]) # Vector of variables with missing values > 75%
+
+# Final dataset to assign missing values
+fdf <- select(fdf, -c(perc_miss_75))
+
+#### Packages for Missing Values imputation ####
+pacman::p_load(mice, Amelia, missForest)
+
