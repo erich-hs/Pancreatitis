@@ -604,6 +604,28 @@ for (i in x) {
   wdf[wdf$ID == i, grepl("_t72", names(wdf))] <- 0
 }
 
+# Assigning 0 to patients that informed 'No' for drinking problem variable 'ts_ruou'
+wdf$ts_ruou[is.na(wdf$ts_ruou)] <- 'No' # Assigning 'No' to missing values on 'ts_ruou'
+wdf$ts_ruou_nam[wdf$ts_ruou == 'No'] <- 0 # Assigning 0 to every patient without declared drinking problem
+wdf$ts_ruou_nam_ml[wdf$ts_ruou == 'No'] <- 0 # Assigning 0 to every patient without declared drinking problem
+
+# Verifying variables triglycerids for PEX and cls clinical examinations to fill some of the MNAR
+wdf$cls_sh_tri_t6
+wdf$dt_pex_tri_s_lan1
+
+x <- wdf$ID[is.na(wdf$cls_sh_tri_t6)]
+for (i in x) {
+  wdf$cls_sh_tri_t6 <- wdf[wdf$ID == i, 'dt_pex_tri_s_lan1']
+}
+
+wdf$cls_sh_tri_t0
+wdf$dt_pex_tri_t_lan1
+
+x <- wdf$ID[is.na(wdf$cls_sh_tri_t0)]
+for (i in x) {
+  wdf$cls_sh_tri_t0 <- wdf[wdf$ID == i, 'dt_pex_tri_t_lan1']
+}
+
 fdf <- select(wdf, -c(rm_var1), -c(rm_var2))
 names(fdf)
 str(fdf)
