@@ -207,7 +207,6 @@ wdf$pex <- factor(wdf$pex,
                   labels = c('Standard Treatment', 'PEX Treatment'))
 
 table(wdf$dead) ## Song = ???
-wdf <- select(wdf, -c(dead)) # Removing dead variable
 
 table(wdf$complication)
 wdf$complication[is.na(wdf$complication)] <- 0 # Assigning 0 to NAs to convert to a binary variable
@@ -585,7 +584,8 @@ rm_var1 <- c('dt_pex_ranson_s_lan1', # Only 2 observation
             'cls_sh_bil_t0', 'cls_sh_bil_t6', 'cls_sh_bil_t30', 'cls_sh_bil_t72',
             'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
             'cls_sh_gan_t0', 'cls_sh_gan_t6', 'cls_sh_gan_t30',
-            'cls_sh_ca_t0') # Variables with inconsistent range of values
+            'cls_sh_ca_t0',
+            'dead') # Variables with inconsistent range of values
 
 rm_var2 <- c('dt_pex_ngaybenh', "dt_pex_tri_t_lan1", "dt_pex_tri_s_lan1", "dt_pex_chol_t_lan1", "dt_pex_chol_s_lan1",
              "dt_pex_ldl_t_lan1", "dt_pex_ldl_s_lan1", "dt_pex_hdl_t_lan1", "dt_pex_apache_t_lan1", "dt_pex_apache_s_lan1",
@@ -593,7 +593,7 @@ rm_var2 <- c('dt_pex_ngaybenh', "dt_pex_tri_t_lan1", "dt_pex_tri_s_lan1", "dt_pe
              "dt_pex_balthazar_t_lan1", "dt_pex_balthazar_s_lan1", "dt_pex_sofa_t_lan1", "dt_pex_sofa_s_lan1",
              "dt_pex_alob_t_lan1", "dt_pex_alob_s_lan1") # Removing dt_pex_ variables with MNAR observations for standard treatment patients
 
-### Dealing with MNAR (Missing Not At Random) observations
+### Dealing with MNAR (Missing Not At Random) observations ###
 # Assigning 0 to t54 and t72 variables, for individuals that stayed less than 3 days in the hospital
 x <- wdf$ID[wdf$rv_ngaydt < 3]
 for (i in x) {
@@ -612,6 +612,18 @@ wdf$ts_ruou_nam_ml[wdf$ts_ruou == 'No'] <- 0 # Assigning 0 to every patient with
 # Verifying variables triglycerids for PEX and cls clinical examinations to fill some of the MNAR
 wdf$cls_sh_tri_t6
 wdf$dt_pex_tri_s_lan1
+
+# Assigning 'PEX Treatment' to patients that has values on variable dt_pex_lan
+wdf$pex[!is.na(wdf$dt_pex_lan)] <- 'PEX Treatment'
+
+# Fixing incorrect treatments for patients ID 23, 92, 31, 115
+wdf$pex[wdf$ID == 23] <- 'Standard Treatment'
+wdf$pex[wdf$ID == 92] <- 'Standard Treatment'
+wdf$pex[wdf$ID == 31] <- 'PEX Treatment'
+wdf$pex[wdf$ID == 115] <- 'PEX Treatment'
+
+# Assigning 0 to variable dt_pex_lan, for patients that has 'Standard Treatment' on pex variable
+wdf$dt_pex_lan[wdf$pex == 'Standard Treatment'] <- 0
 
 x <- wdf$ID[is.na(wdf$cls_sh_tri_t6)]
 for (i in x) {
@@ -642,3 +654,16 @@ fdf <- select(fdf, -c(perc_miss_75))
 #### Packages for Missing Values imputation ####
 pacman::p_load(mice, Amelia, missForest)
 
+vis_miss(fdf, show_perc_col = FALSE) +
+  coord_flip() +
+  facet_grid(fdf$pex) +
+  theme_bw()
+# 36.2% of missing values to enter mice, Amelia, and missForest packages
+
+### MICE
+MiceTest <- mice(fdf[-1], m = 1, maxit = 5, seed = 123)
+summary(MiceTest)
+micedf <- complete(MiceTest, 1)
+
+### Amelia
+names(fdf)
