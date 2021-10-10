@@ -418,6 +418,8 @@ ggplot(wdf, aes(Gender, cls_ct_ctscore_lan1)) + geom_boxplot() + stat_summary(
 ) + labs(title="CTSI score with Computer Tomography (Clean)", y = "CTSI score")
 #Possible values, outliers maintained.
 
+# cls_hh_aptt_t6 outlier at ID = 151 removed
+wdf$cls_hh_aptt_t6[151] <- NA
 
 # cls_sh_ka_tn6: tn6 meaning - Drop?
 table(wdf$cls_sh_ka_tn6)
@@ -572,7 +574,7 @@ ggplot(cls.melt) +
   labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
   theme_bw()
 
-#### Dataset for Regression Model ####
+##### Dataset for Regression Model and MAR/MCAR imputation #####
 ## Variables to remove
 rm_var1 <- c('dt_pex_ranson_s_lan1', # Only 2 observation
             'vv_Others', 'vv_reason1', 'vv_reason2', 'vv_reason3', # Categorical variables without meaningful information
@@ -648,19 +650,81 @@ perc_miss_75 <- names(perc_miss[perc_miss > 75]) # Vector of variables with miss
 # Final dataset to assign missing values
 fdf <- select(fdf, -c(perc_miss_75))
 
-#### Packages for Missing Values imputation ####
+##### Packages for Missing Values imputation #####
 pacman::p_load(mice, Amelia, missForest)
-
 vis_miss(fdf, show_perc_col = FALSE) +
   coord_flip() +
   facet_grid(fdf$pex) +
   theme_bw()
-# 35.4% of missing values to enter mice, Amelia, and missForest packages
+# 35.2% of missing values to enter mice, Amelia, and missForest packages
 
 ### MICE
-MiceRun <- mice(fdf[-1], m = 1, maxit = 5, seed = 123)
+cpus <- parallel::detectCores() # Verifying number of available CPUs
+MiceRun <- parlmice(fdf[-1], m = 5, maxit = 5, cluster.seed = 123, core = cpus)
 summary(MiceRun)
-micedf <- complete(MiceRun, 1)
+mice_df <- complete(MiceRun, 5)
+mice_df$ID <- fdf$ID
+
+
+
+
+##########################################################################
+
+vis_miss(fdf[ , c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t72')])
+
+ggplot(cls.melt) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt2$variable) +
+  theme_bw()
+
+cls.melt2 <- melt(micedf, id.vars = 'ID',
+                 measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+ggplot(cls.melt2) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt2) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt2$variable) +
+  theme_bw()
+
+amelia_df1$ID <- fdf$ID
+cls.melt3 <- melt(amelia_df1, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+
+ggplot(cls.melt3) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt3) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt3$variable) +
+  theme_bw()
+
+forest_df$ID <- fdf$ID
+cls.melt4 <- melt(forest_df, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+
+ggplot(cls.melt4) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt4) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt4$variable) +
+  theme_bw()
+
+merged_df <- cbind(cls.melt, cls.melt2[-(1:2)], cls.melt3[-(1:2)], cls.melt4[-(1:2)])
+names(merged_df) <- c('ID', 'Variable', 'OriginalDF', 'MICE', 'Amelia', 'missForest')
+
+##########################################################################
+
+
+
+
 
 ### Amelia
 # Subsets
@@ -682,6 +746,7 @@ str(fdf[ , ts_var])
 AmeliaRun <- amelia(fdf[, ts_var], m = 5, p2s = 2, noms = nominal_var, #ords = ordinal_var,
                     seed = 123, parallel = 'snow', ncpus = cpus,
                     empri = 0.8*nrow(fdf[-1]))
+amelia_ts <- AmeliaRun$imputations[[5]]
 
 # ls_ variables
 amelia_var(fdf[ , ls_var])
@@ -689,24 +754,24 @@ str(fdf[ , ls_var])
 AmeliaRun <- amelia(fdf[, ls_var], m = 5, p2s = 2, ords = ordinal_var,
                     seed = 123, parallel = 'snow', ncpus = cpus,
                     empri = 0.8*nrow(fdf[-1]))
-AmeliaRun$imputations[[5]] # Individuals 23 and 92 with no information
+amelia_ls <- AmeliaRun$imputations[[5]] # Individuals 23 and 92 with no information
 
 # cls_ variables
-# subset 1
-amelia_var(fdf[ , cls_var][1:53])
-str(fdf[ , cls_var][1:53])
-AmeliaRun <- amelia(fdf[, cls_var][1:53], m = 5, p2s = 2, noms = nominal_var, ords = ordinal_var,
+# cls_ subset 1
+amelia_var(fdf[ , cls_var][1:44])
+str(fdf[ , cls_var][1:44])
+AmeliaRun <- amelia(fdf[, cls_var][1:44], m = 5, p2s = 2, noms = nominal_var, ords = ordinal_var,
                     seed = 123, parallel = 'snow', ncpus = cpus,
                     empri = 0.8*nrow(fdf[-1]))
-AmeliaRun$imputations[[5]] # Individual 23 with no information
+amelia_cls1 <- AmeliaRun$imputations[[5]]
 
-# subset 2
-amelia_var(fdf[ , cls_var][54:107])
-str(fdf[ , cls_var][54:107])
-AmeliaRun <- amelia(fdf[, cls_var][54:107], m = 5, p2s = 2, ords = ordinal_var,
+# cls_ subset 2
+amelia_var(fdf[ , cls_var][45:88])
+str(fdf[ , cls_var][45:88])
+AmeliaRun <- amelia(fdf[, cls_var][45:88], m = 5, p2s = 2,
                     seed = 123, parallel = 'snow', ncpus = cpus,
                     empri = 0.8*nrow(fdf[-1]))
-AmeliaRun$imputations[[5]]
+amelia_cls2 <- AmeliaRun$imputations[[5]]
 
 # dt_ variables
 amelia_var(fdf[ , dt_var])
@@ -714,5 +779,48 @@ str(fdf[ , dt_var])
 AmeliaRun <- amelia(fdf[, dt_var], m = 5, p2s = 2, ords = c(ordinal_var, 'dt_pex_lan'),
                     seed = 123, parallel = 'snow', ncpus = cpus,
                     empri = 0.8*nrow(fdf[-1]))
-AmeliaRun$imputations[[5]]
+amelia_dt <- AmeliaRun$imputations[[5]]
+
+# Amelia final DF
+amelia_df <- cbind(amelia_ts, amelia_ls, amelia_cls1, amelia_cls2, amelia_dt)
+amelia_df[ , c('ID', 'Age', 'Gender', 'rv_ngaydt', 'stomachache', 'vomiting', 'complication', 'pex')] <- 
+  fdf[ , c('ID', 'Age', 'Gender', 'rv_ngaydt', 'stomachache', 'vomiting', 'complication', 'pex')]
+rm(amelia_cls1, amelia_cls2, amelia_dt, amelia_ls, amelia_ts)
+
+
+### missForest
+cpus <- parallel::detectCores() # Verifying number of available CPUs
+doParallel::registerDoParallel(cores = cpus) # Set based on number of CPU cores
+doRNG::registerDoRNG(seed = 123)
+ForestRun <- missForest(fdf[-1], parallelize = 'variables', verbose = TRUE)
+forest_df <- ForestRun$ximp
+forest_df$ID <- fdf$ID
+ForestRun$OOBerror
+
+
+##### Linear Regression #####
+lm_dfs <- list()
+lm_dfs[['Original']] <- fdf
+lm_dfs[['MICE']] <- mice_df
+lm_dfs[['Amelia']] <- amelia_df
+lm_dfs[['missForest']] <- forest_df
+rm(mice_df, amelia_df, forest_df)
+
+# Checking for final datasets % pecent
+vis_miss(lm_dfs$Original)
+vis_miss(lm_dfs$MICE)
+vis_miss(lm_dfs$Amelia) # Individuals with ID = 23, and 92
+vis_miss(lm_dfs$missForest)
+
+# Dropping individuals ID = 23, and 92
+lm_dfs[['Original']] <- lm_dfs[['Original']][-c(23, 92), ]
+lm_dfs[['MICE']] <- lm_dfs[['MICE']][-c(23, 92), ]
+lm_dfs[['Amelia']] <- lm_dfs[['Amelia']][-c(23, 92), ]
+lm_dfs[['missForest']] <- lm_dfs[['missForest']][-c(23, 92), ]
+
+write.csv(lm_dfs[['Original']], file = 'data/original_df.csv')
+write.csv(lm_dfs[['MICE']], file = 'data/MICE_df.csv')
+write.csv(lm_dfs[['Amelia']], file = 'data/Amelia_df.csv')
+write.csv(lm_dfs[['missForest']], file = 'data/missForest_df.csv')
+
 
