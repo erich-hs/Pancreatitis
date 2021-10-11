@@ -666,66 +666,6 @@ mice_df <- complete(MiceRun, 5)
 mice_df$ID <- fdf$ID
 
 
-
-
-##########################################################################
-
-vis_miss(fdf[ , c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t72')])
-
-ggplot(cls.melt) +
-  geom_histogram(aes(value)) +
-  facet_grid(cls.melt2$variable) +
-  theme_bw()
-
-cls.melt2 <- melt(micedf, id.vars = 'ID',
-                 measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
-ggplot(cls.melt2) +
-  geom_boxplot(aes(ID, value, color = variable)) +
-  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
-  theme_bw()
-
-ggplot(cls.melt2) +
-  geom_histogram(aes(value)) +
-  facet_grid(cls.melt2$variable) +
-  theme_bw()
-
-amelia_df1$ID <- fdf$ID
-cls.melt3 <- melt(amelia_df1, id.vars = 'ID',
-                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
-
-ggplot(cls.melt3) +
-  geom_boxplot(aes(ID, value, color = variable)) +
-  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
-  theme_bw()
-
-ggplot(cls.melt3) +
-  geom_histogram(aes(value)) +
-  facet_grid(cls.melt3$variable) +
-  theme_bw()
-
-forest_df$ID <- fdf$ID
-cls.melt4 <- melt(forest_df, id.vars = 'ID',
-                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
-
-ggplot(cls.melt4) +
-  geom_boxplot(aes(ID, value, color = variable)) +
-  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
-  theme_bw()
-
-ggplot(cls.melt4) +
-  geom_histogram(aes(value)) +
-  facet_grid(cls.melt4$variable) +
-  theme_bw()
-
-merged_df <- cbind(cls.melt, cls.melt2[-(1:2)], cls.melt3[-(1:2)], cls.melt4[-(1:2)])
-names(merged_df) <- c('ID', 'Variable', 'OriginalDF', 'MICE', 'Amelia', 'missForest')
-
-##########################################################################
-
-
-
-
-
 ### Amelia
 # Subsets
 ts_var <- grepl("ts_", names(fdf))
@@ -795,10 +735,9 @@ doRNG::registerDoRNG(seed = 123)
 ForestRun <- missForest(fdf[-1], parallelize = 'variables', verbose = TRUE)
 forest_df <- ForestRun$ximp
 forest_df$ID <- fdf$ID
-ForestRun$OOBerror
 
 
-##### Linear Regression #####
+##### Linear Regression Datasets #####
 lm_dfs <- list()
 lm_dfs[['Original']] <- fdf
 lm_dfs[['MICE']] <- mice_df
@@ -818,9 +757,64 @@ lm_dfs[['MICE']] <- lm_dfs[['MICE']][-c(23, 92), ]
 lm_dfs[['Amelia']] <- lm_dfs[['Amelia']][-c(23, 92), ]
 lm_dfs[['missForest']] <- lm_dfs[['missForest']][-c(23, 92), ]
 
-write.csv(lm_dfs[['Original']], file = 'data/original_df.csv')
-write.csv(lm_dfs[['MICE']], file = 'data/MICE_df.csv')
-write.csv(lm_dfs[['Amelia']], file = 'data/Amelia_df.csv')
-write.csv(lm_dfs[['missForest']], file = 'data/missForest_df.csv')
+write.csv(lm_dfs[['Original']], file = 'data/original_df.csv', row.names = FALSE)
+write.csv(lm_dfs[['MICE']], file = 'data/MICE_df.csv', row.names = FALSE)
+write.csv(lm_dfs[['Amelia']], file = 'data/Amelia_df.csv', row.names = FALSE)
+write.csv(lm_dfs[['missForest']], file = 'data/missForest_df.csv', row.names = FALSE)
 
+
+##### Inputation comparison #####
+vis_miss(fdf[ , c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t72')])
+
+cls.melt <- melt(wdf, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+ggplot(cls.melt) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt2$variable) +
+  theme_bw()
+
+cls.melt2 <- melt(micedf, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+ggplot(cls.melt2) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt2) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt2$variable) +
+  theme_bw()
+
+amelia_df1$ID <- fdf$ID
+cls.melt3 <- melt(amelia_df1, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+
+ggplot(cls.melt3) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt3) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt3$variable) +
+  theme_bw()
+
+forest_df$ID <- fdf$ID
+cls.melt4 <- melt(forest_df, id.vars = 'ID',
+                  measure.vars = c('cls_hh_bc_t0', 'cls_hh_bc_t6', 'cls_hh_bc_t30', 'cls_hh_bc_t54', 'cls_hh_bc_t72'))
+
+ggplot(cls.melt4) +
+  geom_boxplot(aes(ID, value, color = variable)) +
+  labs(x = '', y = 'Exam Results', title = 'Boxplot for cls_hh_bc variables') +
+  theme_bw()
+
+ggplot(cls.melt4) +
+  geom_histogram(aes(value)) +
+  facet_grid(cls.melt4$variable) +
+  theme_bw()
 
