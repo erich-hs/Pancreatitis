@@ -5,10 +5,10 @@ setwd('~/R/DANA-4830/Assignment/Pancreatitis')
 
 lm_dfs <- list()
 
-lm_dfs[['Original_df']] <- read.csv('data/original_df.csv', stringsAsFactors = TRUE)
-lm_dfs[['MICE_df']] <- read.csv('data/MICE_df.csv', stringsAsFactors = TRUE)
-lm_dfs[['Amelia_df']] <- read.csv('data/Amelia_df.csv', stringsAsFactors = TRUE)
-lm_dfs[['missForest_df']] <- read.csv('data/missForest_df.csv', stringsAsFactors = TRUE)
+lm_dfs[['Original_df']] <- read.csv('data/final_models/original_df.csv', stringsAsFactors = TRUE)
+lm_dfs[['MICE_df']] <- read.csv('data/final_models/MICE_df.csv', stringsAsFactors = TRUE)
+lm_dfs[['Amelia_df']] <- read.csv('data/final_models/Amelia_df.csv', stringsAsFactors = TRUE)
+lm_dfs[['missForest_df']] <- read.csv('data/final_models/missForest_df.csv', stringsAsFactors = TRUE)
 
 attach(lm_dfs)
 
@@ -39,6 +39,7 @@ indep_var = c('Gender', 'cls_hh_hct_t72', 'cls_hh_aptt_t6', 'cls_hh_fib_t30',
               'cls_km_pao2_t54', 'cls_km_hco3_t6', 'cls_km_hco3_t30')
 sc1_mice_model3 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = MICE_df)
 mice_sc1 <- summary(sc1_mice_model3)
+mice_sc1
 
 # Amelia
 resp_var = 'dt_pex_lan'
@@ -65,6 +66,7 @@ summary(sc1_amelia_model4)
 indep_var = c('Gender', 'cls_sh_na_t30', 'cls_sh_ka_t0', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_km_pao2_t54')
 sc1_amelia_model5 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
 amelia_sc1 <- summary(sc1_amelia_model5)
+amelia_sc1
 
 # missForest
 resp_var = 'dt_pex_lan'
@@ -82,6 +84,7 @@ indep_var = c('cls_hh_fib_t30', 'cls_sh_chol_t0', 'cls_sh_na_t30', 'cls_km_paco2
               'cls_hh_aptt_t72', 'cls_hh_fib_t72')
 sc1_forest_model3 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = missForest_df)
 missForest_sc1 <- summary(sc1_forest_model3)
+missForest_sc1
 
 # Removing underperforming models
 rm(sc1_amelia_model, sc1_amelia_model2, sc1_amelia_model3, sc1_amelia_model4,
@@ -151,6 +154,7 @@ summary(sc3_mice_model2)
 indep_var = c('cls_hh_tc_t30', 'cls_hh_aptt_t30', 'cls_sh_ck_t0', 'dt_dich_vao_t48', 'dt_nhin_ngay')
 sc3_mice_model3 <- lm(paste('rv_ngaydt ~ ', paste(indep_var, collapse = "+"), sep = ""), data = MICE_df)
 mice_sc3 <- summary(sc3_mice_model3)
+mice_sc3
 
 # Amelia
 sc3_amelia_model <- lm(rv_ngaydt ~ ., data = Amelia_df[, -117])
@@ -162,6 +166,7 @@ summary(sc3_amelia_model2)
 
 sc3_amelia_model3 <- lm(rv_ngaydt ~ cls_sh_tri_t6 + dt_nhin_ngay, data = Amelia_df)
 amelia_sc3 <- summary(sc3_amelia_model3)
+amelia_sc3
 
 # missForest
 sc3_forest_model <- lm(rv_ngaydt ~ ., data = missForest_df[, -124])
@@ -173,6 +178,7 @@ summary(sc3_forest_model2)
 
 sc3_forest_model3 <- lm(rv_ngaydt ~ ls_diem_ranson_t0 + cls_sh_tri_t6 + cls_km_hco3_t54, data = missForest_df)
 missForest_sc3 <- summary(sc3_forest_model3)
+missForest_sc3
 
 # Removing underperforming models
 rm(sc3_amelia_model, sc3_amelia_model2, sc3_forest_model, sc3_forest_model2, sc3_mice_model, sc3_mice_model2)
