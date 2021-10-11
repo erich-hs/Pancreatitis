@@ -1,7 +1,7 @@
 pacman::p_load(tidyverse, olsrr, forecast, corrr, caret, GGally,
                lmtest, car, rsample, class, lime, reshape2, ggpubr, usethis)
 
-setwd('~/R/DANA-4830/Assignment/Pancreatitis')
+setwd("~/Langara/DANA 4830 - 001/Assignment 2/Pancreatitis")
 
 lm_dfs <- list()
 
@@ -47,25 +47,34 @@ indep_var = c('Age', 'Gender', 'ls_diem_apache_t0', names(Original_df[ , grepl("
 sc1_amelia_model <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
 summary(sc1_amelia_model)
 
-indep_var = c('Gender', 'cls_sh_ure_t30', 'cls_sh_cre_t6', 'cls_sh_ck_t0', 'cls_sh_na_t30',
-              'cls_sh_ka_t0', 'cls_km_paco2_t72')
+#indep_var = c('Gender', 'cls_sh_ure_t30', 'cls_sh_cre_t6', 'cls_sh_ck_t0', 'cls_sh_na_t30',
+             # 'cls_sh_ka_t0', 'cls_km_paco2_t72')
+indep_var = c('Gender', 'cls_hh_bc_t30', 'cls_hh_pt_t72', 'cls_hh_aptt_t72', 'cls_hh_fib_t30',
+              'cls_sh_ure_t30', 'cls_sh_cre_t0','cls_sh_ck_t0','cls_sh_ka_t0','cls_sh_ka_t6','cls_km_ph_t30','cls_km_ph_t54',
+              'cls_km_paco2_t0','cls_km_paco2_t54','cls_km_pao2_t72','cls_km_hco3_t6')
+
 sc1_amelia_model2 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
 summary(sc1_amelia_model2)
+
+indep_var = c('Gender','cls_hh_pt_t72', 'cls_hh_aptt_t72', 'cls_hh_fib_t30',
+              'cls_sh_ka_t0','cls_km_ph_t54','cls_km_paco2_t54','cls_km_pao2_t72','cls_km_hco3_t6')
+sc1_amelia_model3<- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
+summary(sc1_amelia_model3)
 
 # Adding best performed variables from MICE model 3
 indep_var = c('Gender', 'cls_sh_ure_t30', 'cls_sh_na_t30', 'cls_sh_ka_t0', 'cls_hh_aptt_t6',
               'cls_hh_fib_t30', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_sh_tri_t6', 'cls_km_pao2_t54')
-sc1_amelia_model3 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
-summary(sc1_amelia_model3)
-
-indep_var = c('Gender', 'cls_sh_na_t30', 'cls_sh_ka_t0',
-              'cls_hh_fib_t30', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_km_pao2_t54')
 sc1_amelia_model4 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
 summary(sc1_amelia_model4)
 
-indep_var = c('Gender', 'cls_sh_na_t30', 'cls_sh_ka_t0', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_km_pao2_t54')
+indep_var = c('Gender', 'cls_sh_na_t30', 'cls_sh_ka_t0',
+              'cls_hh_fib_t30', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_km_pao2_t54')
 sc1_amelia_model5 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
-amelia_sc1 <- summary(sc1_amelia_model5)
+summary(sc1_amelia_model5)
+
+indep_var = c('Gender', 'cls_sh_na_t30', 'cls_sh_ka_t0', 'cls_hh_fib_t72', 'cls_sh_chol_t0', 'cls_km_pao2_t54')
+sc1_amelia_model6 <- lm(paste('dt_pex_lan ~ ', paste(indep_var, collapse = "+"), sep = ""), data = Amelia_df)
+amelia_sc1 <- summary(sc1_amelia_model6)
 amelia_sc1
 
 # missForest
