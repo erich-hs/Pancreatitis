@@ -176,3 +176,49 @@ SOFAtest
 #The p-value of the test is 0.6958, which is greater than the significance level alpha = 0.05.Accept Null Hypothesis. Means are not different.
 #We can conclude that pex patient's average SOFA Score is not significantly different from std treatment's average SOFA Score
 #with a p-value = 0.6958.
+
+#### Correlation tests
+### Correlation of Blood Count Group ####
+bloodcount <- missForest_df[,c(26:44)]
+cor(bloodcount, method = "pearson")
+
+### Correlation of Blood Gases Group ####
+bloodgas <- missForest_df[,c(86:110)]
+cor(bloodgas, method = "pearson")
+
+### Correlation of Clynical Symptoms ####
+clynsymp <- missForest_df[,c(13:17)]
+cor(clynsymp, method = "pearson")
+
+### Correlation of Coagulation Exams ####
+coagexams <- missForest_df[,c(45:56)]
+cor(coagexams, method = "pearson")
+
+### Correlation of Disease Severity variables####
+severity <- missForest_df[,c(18:22,25,66)]
+cor(severity, method = "pearson")
+
+### Correlation between CTSI Variables ###
+CTSIcor <- cor(missForest_df$ls_diem_ct_t0,missForest_df$cls_ct_ctscore_lan1,method = "pearson")
+CTSIcor
+
+ggscatter(missForest_df, x = "ls_diem_ct_t0", y = "cls_ct_ctscore_lan1", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "CTSI Score", ylab = "CTSI Tomography")
+
+### Correlation of Inflamation Exams ####
+inflaexams <- missForest_df[,c(57:65)]
+cor(inflaexams, method = "pearson")
+
+### Correlation of Pancreas Monitoring Exams ####
+pancreasmonit <- missForest_df[,c(67:85)]
+cor(pancreasmonit, method = "pearson")
+
+### Correlation of Pex treatment exams ####
+pexexams <- missForest_df[,c(121,122)]
+cor(pexexams, method = "pearson")
+
+### Correlation of STD treatment exams ####
+stdexams <- missForest_df[,c(111:120)]
+cor(stdexams, method = "pearson")
