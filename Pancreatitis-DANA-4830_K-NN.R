@@ -16,37 +16,63 @@ summary(pext)
 summary(stdt)
 
 #Another way to compute summary statistics
-library(dplyr)
-group_by(missForest_df, pex) %>%
-  summarise(
-    count = n(),
-    mean = mean(Age, na.rm = TRUE),
-    sd = sd(Age, na.rm = TRUE)
-)
-
 #For loop testing, to compute all columns
+library(dplyr)
+library(rlang)
 numeric <- names(missForest_df[ , sapply(missForest_df, is.numeric)])
 for (i in numeric) {
   print(i)
-  print(group_by(missForest_df, pex) %>%
+  print(group_by(missForest_df,pex) %>%
           summarise(
             count = n(),
-            disp_mean = mean(missForest_df[[i]], na.rm = TRUE),
-            disp_sd = sd(missForest_df[[i]], na.rm = TRUE)
+            disp_mean = mean(!!sym(i), na.rm = TRUE),
+            disp_sd = sd(!!sym(i), na.rm = TRUE)
           ))
 }
 
-#################### TEST
-numeric <- names(missForest_df[ , sapply(missForest_df, is.numeric)])
-for (i in numeric) {
-  print(i)
-  print(missForest_df %>% group_by(pex) %>%
-          summarise(
-            count = n(),
-            disp_mean = mean(missForest_df[[i]], na.rm = TRUE),
-            disp_sd = sd(missForest_df[[i]], na.rm = TRUE)
-          ))
-}
+#### Factor Analysis ####
+library(psych)
+library(GPArotation)
+
+### Defining numeric variables only df ###
+NumDF <- dplyr::select_if(missForest_df, is.numeric)
+
+### Removing ID column ###
+NumWDF <- NumDF[,c(2:114)]
+
+### Defining number of Factors ###
+nofactors = fa.parallel(NumWDF, fm="ml", fa="fa")
+nofactors$fa.values #13 Factors recommended
+
+sum(nofactors$fa.values > 1.0) # old kaiser criterion, 16 Factors
+sum(nofactors$fa.values > .7) # new kaiser criterion, 18 Factors
+
+### Models ###
+## 13 Variables test ##
+fit.one <- factanal(NumWDF,factors=13,rotation="oblimin")
+print(fit.one)
+print(fit.one, digits = 2, cutoff = .2, sort = TRUE)
+
+model.one <- fa(NumWDF, 
+                nfactors=13, 
+                rotate = "oblimin", 
+                fm = "ml")
+fa.diagram(model.one)
+model.one$Phi # Rotation
+print(model.one, digits = 2, cutoff = .5, sort = TRUE) #13 Factors describes 47% of the variance
+
+## 16 Variables test ##
+fit.two <- factanal(NumWDF,factors=16,rotation="oblimin")
+print(fit.two)
+print(fit.two, digits = 2, cutoff = .2, sort = TRUE)
+
+model.two <- fa(NumWDF, 
+             nfactors=16, 
+             rotate = "oblimin", 
+             fm = "ml")
+fa.diagram(model.two)
+model.two$Phi # Rotation
+print(model.two, digits = 2, cutoff = .5, sort = TRUE) #16 Factors describes 52% of the variance
 
 
 #### t-test to evaluate whether the means are different on the SCORES variables
