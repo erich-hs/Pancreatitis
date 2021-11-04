@@ -40,18 +40,23 @@ NumDF <- dplyr::select_if(missForest_df, is.numeric)
 ### Removing ID column ###
 NumWDF <- NumDF[,c(2:114)]
 
+#### Reducing Number of Variables for T-test
 ### Defining number of Factors ###
 nofactors = fa.parallel(NumWDF, fm="ml", fa="fa")
 nofactors$fa.values #13 Factors recommended
-
 sum(nofactors$fa.values > 1.0) # old kaiser criterion, 16 Factors
 sum(nofactors$fa.values > .7) # new kaiser criterion, 18 Factors
 
-### Models ###
-## 13 Variables test ##
+### FA Models ####
+## 13 Factors test ##
 fit.one <- factanal(NumWDF,factors=13,rotation="oblimin")
-print(fit.one)
-print(fit.one, digits = 2, cutoff = .2, sort = TRUE)
+print(fit.one, digits = 2, cutoff = .2, sort = TRUE) #reject hypothesis that 13 factors are perfect fit, p-value 3.47e^-124
+#The null hypothesis, H0, is that the number of factors in the model, is sufficient to capture the full dimensionality
+#of the data set. 
+#We reject H0 if the p-value is less than 0.05.Such a result indicates that the number of factors is too small.
+#If we do not reject H0,the result indicates that there are likely enough (or more than enough) factors capture the full dimensionality
+#of the data set (Teetor 2011).
+#When you accept the H0 you have an appropriate model.
 
 model.one <- fa(NumWDF, 
                 nfactors=13, 
@@ -59,20 +64,61 @@ model.one <- fa(NumWDF,
                 fm = "ml")
 fa.diagram(model.one)
 model.one$Phi # Rotation
-print(model.one, digits = 2, cutoff = .5, sort = TRUE) #13 Factors describes 47% of the variance
+print(model.one, digits = 2, cutoff = .2, sort = TRUE) #13 Factors describes 47% of the variance
 
-## 16 Variables test ##
+
+## 16 Factors test ##
 fit.two <- factanal(NumWDF,factors=16,rotation="oblimin")
-print(fit.two)
-print(fit.two, digits = 2, cutoff = .2, sort = TRUE)
+print(fit.two, digits = 2, cutoff = .2, sort = TRUE) #reject hypothesis that 16 factors are perfect fit, p-value 5.89e^-86
 
 model.two <- fa(NumWDF, 
-             nfactors=16, 
-             rotate = "oblimin", 
-             fm = "ml")
+                nfactors=16, 
+                rotate = "oblimin", 
+                fm = "ml")
 fa.diagram(model.two)
 model.two$Phi # Rotation
-print(model.two, digits = 2, cutoff = .5, sort = TRUE) #16 Factors describes 52% of the variance
+print(model.two, digits = 2, cutoff = .2, sort = TRUE) #16 Factors describes 52% of the variance
+
+## 18 Factors test ##
+fit.three <- factanal(NumWDF,factors=18,rotation="oblimin")
+print(fit.three, digits = 2, cutoff = .2, sort = TRUE) #reject hypothesis that 18 factors are perfect fit, p-value 9.08e^-68
+
+model.three <- fa(NumWDF, 
+                  nfactors=18, 
+                  rotate = "oblimin", 
+                  fm = "ml")
+fa.diagram(model.three)
+model.three$Phi # Rotation
+print(model.three, digits = 2, cutoff = .2, sort = TRUE) #18 Factors describes 55% of the variance
+#The 18 Factor model describes more variance of the Dataframe, but it also increase its complexity, thus
+#the group decided to use the 13 Factor model.
+
+### Refining the Factor Analysis model ####
+uniq <- data.frame(model.one$uniquenesses)
+uniq <- rownames_to_column(uniq, var = "Variable")
+uniq[uniq[,2] >0.5, "Variable"]
+
+### FACTOR ANALYSIS SCORE T-TEST ###
+m1df <- data.frame(model.one$scores)
+m1df$pex <- paste(missForest_df$pex)
+t.test(ML1 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML2 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML3 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML4 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML5 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML6 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML7 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML8 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML9 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML10 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML11 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML12 ~ pex, data = m1df, var.equal = TRUE)
+t.test(ML13 ~ pex, data = m1df, var.equal = TRUE)
+
+
+
+
+
 
 
 #### t-test to evaluate whether the means are different on the SCORES variables
