@@ -117,8 +117,6 @@ t.test(ML13 ~ pex, data = m1df, var.equal = TRUE)
 
 
 
-
-
 ####For loop t-test all numeric variables ####
 ##Assumption 1: Are the Samples independent? Yes, the two treatments are independent of each other 
 ##Assumption 2: Normal Distributed?
@@ -126,7 +124,8 @@ for (i in numeric) {
   print(i)
   print(with(missForest_df, shapiro.test(missForest_df[,i][pex == "PEX Treatment"])))
   hist(pext[,i],main=i)
-  }
+}
+
 for (i in numeric) {
   print(i)
   print(with(missForest_df,shapiro.test(missForest_df[,i][pex == "Standard Treatment"])))
@@ -137,12 +136,69 @@ for (i in numeric) {
 for (i in numeric) {
   print(i)
   print(var.test(missForest_df[,i] ~ pex, data = missForest_df))
-  }
-##T-Test
-for (i in numeric) {
-  print(i)
-  print(t.test(missForest_df[,i] ~ pex, data = missForest_df, var.equal = TRUE))
 }
+
+
+#### Master Table - Numeric ####
+##Mean, Standard Deviation, Normality Check, Variance Check and T-test of all numeric variables.
+tpvalues <- list()
+normpvalues <- list()
+varipvalues <- list()
+pextmean <- list()
+stdtmean <- list()
+pextstd <- list()
+stdtstd <- list()
+
+for (i in numeric[2:114]) {#Numeric ID 2: 114 to remove the ID and X variables
+  t <- t.test(missForest_df[,i] ~ pex, data = missForest_df, var.equal = TRUE)
+  norm <- with(missForest_df, shapiro.test(missForest_df[,i]))
+  varia <- var.test(missForest_df[,i] ~ pex, data = missForest_df)
+  
+  gmean <-group_by(missForest_df,pex) %>%
+    summarise(
+      disp_mean = mean(!!sym(i), na.rm = TRUE),
+      disp_sd = sd(!!sym(i), na.rm = TRUE)
+    )
+  
+  tpvalues[[i]] <- round(t$p.value,4)
+  normpvalues[[i]] <- round(norm$p.value,4)
+  varipvalues[[i]] <- round(varia$p.value,4)
+  pextmean[[i]] <- round(gmean[1,2],2)
+  stdtmean[[i]] <- round(gmean[2,2],2)
+  pextstd[[i]] <- round(gmean[1,3],2)
+  stdtstd[[i]] <- round(gmean[2,3],2)
+}
+
+tpvalues <- do.call("rbind", tpvalues)
+normpvalues <- do.call("rbind", normpvalues)
+varipvalues <- do.call("rbind", varipvalues)
+pextmean <- do.call("rbind", pextmean)
+stdtmean <- do.call("rbind", stdtmean)
+pextstd <- do.call("rbind", pextstd)
+stdtstd <- do.call("rbind", stdtstd)
+
+Numericdf <- data.frame(pextmean,stdtmean,pextstd,stdtstd,normpvalues,varipvalues,tpvalues)
+names(Numericdf) <- c("Pex T Mean","Standard T Mean","Pex T Stdev","Standard T Stdev","Shapiro-W p-values","Var-test p-values",
+               "T-test p-values")
+#Filtering all variables with t-test p-value <0.05
+Numericdf <- Numericdf[Numericdf[,7] <0.05,]
+
+#### Categorical ####
+categorical <- names(missForest_df[ , sapply(missForest_df, is.factor)])
+#Removing categorical variables ts_benhmat and stomachache, since they do not produce meaningful summary tables
+chisqpvalues <- list()
+
+for (i in categorical[-c(3,6)]) {
+  print(i)
+  chisqt <- chisq.test(missForest_df$pex, missForest_df[,i])
+  print(chisqt$observed)
+  print(chisqt$expected)
+  print(chisqt$residuals)
+  
+  chisqpvalues[[i]] <-round(chisqt$p.value,4)
+}
+chisqpvalues <- do.call("rbind", chisqpvalues)
+
 
 #### t-test to evaluate whether the means are different on the SCORES variables####
 ### APACHE Score ####
