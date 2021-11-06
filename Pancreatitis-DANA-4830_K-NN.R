@@ -122,10 +122,22 @@ t.test(ML13 ~ pex, data = m1df, var.equal = TRUE)
 ####For loop t-test all numeric variables ####
 ##Assumption 1: Are the Samples independent? Yes, the two treatments are independent of each other 
 ##Assumption 2: Normal Distributed?
-for (i in numeric) {print(with(missForest_df, shapiro.test(missForest_df[,i][pex == "PEX Treatment"])))}
-for (i in numeric) {print(with(missForest_df,shapiro.test(missForest_df[,i][pex == "Standard Treatment"])))}
+for (i in numeric) {
+  print(i)
+  print(with(missForest_df, shapiro.test(missForest_df[,i][pex == "PEX Treatment"])))
+  hist(pext[,i],main=i)
+  }
+for (i in numeric) {
+  print(i)
+  print(with(missForest_df,shapiro.test(missForest_df[,i][pex == "Standard Treatment"])))
+  hist(stdt[,i],main=i)
+}
+
 ##Assumption 3: Same variance of the two population?
-for (i in numeric) {print(var.test(missForest_df[,i] ~ pex, data = missForest_df))}
+for (i in numeric) {
+  print(i)
+  print(var.test(missForest_df[,i] ~ pex, data = missForest_df))
+  }
 ##T-Test
 for (i in numeric) {
   print(i)
