@@ -208,12 +208,9 @@ library(MASS)
 ##Assumption 1:	Data is normally distributed - We checked in the shapiro-wilk test that data is not normally distributed
 ##Histograms of the final dataframe
 Rnames <- rownames(Numericdf)
-for (i in Rnames) {
-  hist(missForest_df[,i],main=i)
-}
 
 #Split the data into training (80%) and test set (20%)
-LDAdf <- missForest_df[,c(Rnames,categorical[-c(3,6)])]
+LDAdf <- missForest_df[,c("ID",Rnames,categorical[-c(3,6)])]
 
 set.seed(123)
 training.samples <-LDAdf$pex %>%
@@ -223,11 +220,11 @@ test.data <- LDAdf[-training.samples, ]
 
 ## Normalizing the data
 # Estimate pre-processing parameters
-preproc.param <- train.data %>% 
+preproc.param <- train.data[,-1] %>% 
   preProcess(method = c("center", "scale"))
 # Transform the data using the estimated parameters
-train.transformed <- preproc.param %>% predict(train.data)
-test.transformed <- preproc.param %>% predict(test.data)
+train.transformed <- preproc.param %>% predict(train.data[,-1])
+test.transformed <- preproc.param %>% predict(test.data[,-1])
 
 # Fit the model
 ldamodel <- lda(pex~., data = train.transformed)
@@ -235,18 +232,59 @@ ldamodel
 plot(ldamodel)
 
 # Make predictions
-predictions <- model %>% predict(test.transformed)
-# Predicted probabilities of class memebership.
-head(predictions$posterior) 
-# Linear discriminants - Shows the linear combination of predictor variables that are used to form the LDA decision rule
-head(predictions$x) 
+predictions <- ldamodel %>% predict(test.transformed)
+# Predicted probabilities of class membership.
+predictions$posterior
+# Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
+predictions$x
 
-# Model accuracy - 96.875% chance of correctly classifying the patients in its groups.
+# Model accuracy - 100% chance of correctly classifying the patients in its groups.
 mean(predictions$class==test.transformed$pex)
 
+### Dataset with miss classification analysis ####
+missForest_df2 <- missForest_df
 
+# Reversing the qualitative manual adjust made in the Assignment2 for patients ID 23, 25, 31, 75, 92, 115, 121, and 122 
+#ID 23 and 92 were completely blank, thus were removed
+missForest_df2$pex[missForest_df2$ID == 25] <- 'Standard Treatment'
+missForest_df2$pex[missForest_df2$ID == 31] <- 'Standard Treatment'
+missForest_df2$pex[missForest_df2$ID == 75] <- 'Standard Treatment'
+missForest_df2$pex[missForest_df2$ID == 115] <- 'Standard Treatment'
+missForest_df2$pex[missForest_df2$ID == 121] <- 'Standard Treatment'
+missForest_df2$pex[missForest_df2$ID == 122] <- 'Standard Treatment'
 
-#### t-test to evaluate whether the means are different on the SCORES variables####
+### LDA for the 2nd dataframe ####
+LDAdf2 <- missForest_df2[,c("ID",Rnames,categorical[-c(3,6)])]
+
+missclass <- c(25, 31, 75, 115, 121, 122)
+test.data2 <- filter(LDAdf2, ID %in% missclass)
+`%notin%` <- Negate(`%in%`)
+train.data2 <- filter(LDAdf2, ID %notin% missclass)
+
+## Normalizing the data
+# Estimate pre-processing parameters
+preproc.param2 <- train.data2[,-1] %>% 
+  preProcess(method = c("center", "scale"))
+# Transform the data using the estimated parameters
+train.transformed2 <- preproc.param %>% predict(train.data2[,-1])
+test.transformed2 <- preproc.param %>% predict(test.data2[,-1])
+
+# Fit the model
+ldamodel2 <- lda(pex~., data = train.transformed2)
+ldamodel2
+plot(ldamodel2)
+
+# Make predictions
+predictions2 <- ldamodel2 %>% predict(test.transformed2)
+# Predicted probabilities of class membership.
+head(predictions2$posterior) 
+# Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
+head(predictions2$x) 
+
+# Model accuracy - 100% chance of correctly classifying the patients in its groups.
+mean(predictions2$class==test.transformed2$pex)
+
+#### t-test to evaluate whether the means are different on the SCORES variables###
 ### APACHE Score ####
 ##Assumption 1: Are the Samples independent? Yes, the two treatments are independent of each other 
 ##Assumption 2: Normal Distributed? 
