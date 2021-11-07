@@ -7,6 +7,10 @@ missForest_df <- read.csv('~/Langara/DANA 4830 - 001/Assignment 2/Pancreatitis/d
 
 summary(missForest_df)
 
+#Complication, was numeric, changed to Factor
+table(missForest_df$complication)
+missForest_df$complication <- as.factor(missForest_df$complication)
+
 #Sub-setting the df by treatment
 pext <- subset(missForest_df,missForest_df$pex == 'PEX Treatment')
 stdt <- subset(missForest_df,missForest_df$pex == 'Standard Treatment')
@@ -149,7 +153,7 @@ stdtmean <- list()
 pextstd <- list()
 stdtstd <- list()
 
-for (i in numeric[2:114]) {#Numeric ID 2: 114 to remove the ID and X variables
+for (i in numeric[2:113]) {#Numeric ID 2: 113 to remove the ID and X variables
   t <- t.test(missForest_df[,i] ~ pex, data = missForest_df, var.equal = TRUE)
   norm <- with(missForest_df, shapiro.test(missForest_df[,i]))
   varia <- var.test(missForest_df[,i] ~ pex, data = missForest_df)
@@ -198,6 +202,24 @@ for (i in categorical[-c(3,6)]) {
   chisqpvalues[[i]] <-round(chisqt$p.value,4)
 }
 chisqpvalues <- do.call("rbind", chisqpvalues)
+
+### LDA ####
+##Assumption 1:	Data is normally distributed - We checked in the shapiro-wilk test that data is not normally distributed
+##Histograms of the final dataframe
+Rnames <- rownames(Numericdf)
+for (i in Rnames) {
+  hist(missForest_df[,i],main=i)
+}
+
+# Split the data into training (80%) and test set (20%)
+LDAdf <- missForest_df[,c(Rnames,categorical)]
+
+set.seed(123)
+training.samples <- missForest_df$Species %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data <- iris[training.samples, ]
+test.data <- iris[-training.samples, ]
+
 
 
 #### t-test to evaluate whether the means are different on the SCORES variables####
