@@ -203,7 +203,8 @@ for (i in categorical[-c(3,6)]) {
 }
 chisqpvalues <- do.call("rbind", chisqpvalues)
 
-### LDA ####
+### LDA  ####
+library(MASS)
 ##Assumption 1:	Data is normally distributed - We checked in the shapiro-wilk test that data is not normally distributed
 ##Histograms of the final dataframe
 Rnames <- rownames(Numericdf)
@@ -211,14 +212,37 @@ for (i in Rnames) {
   hist(missForest_df[,i],main=i)
 }
 
-# Split the data into training (80%) and test set (20%)
-LDAdf <- missForest_df[,c(Rnames,categorical)]
+#Split the data into training (80%) and test set (20%)
+LDAdf <- missForest_df[,c(Rnames,categorical[-c(3,6)])]
 
 set.seed(123)
-training.samples <- missForest_df$Species %>%
+training.samples <-LDAdf$pex %>%
   createDataPartition(p = 0.8, list = FALSE)
-train.data <- iris[training.samples, ]
-test.data <- iris[-training.samples, ]
+train.data <- LDAdf[training.samples, ]
+test.data <- LDAdf[-training.samples, ]
+
+## Normalizing the data
+# Estimate pre-processing parameters
+preproc.param <- train.data %>% 
+  preProcess(method = c("center", "scale"))
+# Transform the data using the estimated parameters
+train.transformed <- preproc.param %>% predict(train.data)
+test.transformed <- preproc.param %>% predict(test.data)
+
+# Fit the model
+ldamodel <- lda(pex~., data = train.transformed)
+ldamodel
+plot(ldamodel)
+
+# Make predictions
+predictions <- model %>% predict(test.transformed)
+# Predicted probabilities of class memebership.
+head(predictions$posterior) 
+# Linear discriminants - Shows the linear combination of predictor variables that are used to form the LDA decision rule
+head(predictions$x) 
+
+# Model accuracy - 96.875% chance of correctly classifying the patients in its groups.
+mean(predictions$class==test.transformed$pex)
 
 
 
