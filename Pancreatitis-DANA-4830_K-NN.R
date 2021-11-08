@@ -1,13 +1,13 @@
 pacman::p_load(tidyverse, olsrr, forecast, corrr, caret, GGally,
                lmtest, car, rsample, class, lime, reshape2, ggpubr, usethis)
 
-setwd("~/Langara/DANA 4830 - 001/Assignment 2/Pancreatitis")
+setwd('~/R/DANA-4830/Assignment/Pancreatitis')
 
-missForest_df <- read.csv('~/Langara/DANA 4830 - 001/Assignment 2/Pancreatitis/data/final_models/missForest_df.csv', stringsAsFactors = TRUE)
+missForest_df <- read.csv('data/final_models/missForest_df.csv', stringsAsFactors = TRUE)
 
 summary(missForest_df)
 
-#Complication, was numeric, changed to Factor
+#Complication was numeric, changed to Factor
 table(missForest_df$complication)
 missForest_df$complication <- as.factor(missForest_df$complication)
 
@@ -121,7 +121,7 @@ t.test(ML13 ~ pex, data = m1df, var.equal = TRUE)
 
 
 
-####For loop t-test all numeric variables ####
+#### For loop t-test all numeric variables ####
 ##Assumption 1: Are the Samples independent? Yes, the two treatments are independent of each other 
 ##Assumption 2: Normal Distributed?
 for (i in numeric) {
@@ -144,7 +144,7 @@ for (i in numeric) {
 
 
 #### Master Table - Numeric ####
-##Mean, Standard Deviation, Normality Check, Variance Check and T-test of all numeric variables.
+## Mean, Standard Deviation, Normality Check, Variance Check and T-test of all numeric variables.
 tpvalues <- list()
 normpvalues <- list()
 varipvalues <- list()
@@ -238,7 +238,7 @@ predictions$posterior
 # Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
 predictions$x
 
-# Model accuracy - 100% chance of correctly classifying the patients in its groups.
+# Model accuracy - 96.87% chance of correctly classifying the patients in its groups.
 mean(predictions$class==test.transformed$pex)
 
 ### Dataset with miss classification analysis ####
@@ -253,7 +253,7 @@ missForest_df2$pex[missForest_df2$ID == 115] <- 'Standard Treatment'
 missForest_df2$pex[missForest_df2$ID == 121] <- 'Standard Treatment'
 missForest_df2$pex[missForest_df2$ID == 122] <- 'Standard Treatment'
 
-### LDA for the 2nd dataframe ####
+### LDA for the 2nd case with misclassified individuals ####
 LDAdf2 <- missForest_df2[,c("ID",Rnames,categorical[-c(3,6)])]
 
 missclass <- c(25, 31, 75, 115, 121, 122)
@@ -277,12 +277,25 @@ plot(ldamodel2)
 # Make predictions
 predictions2 <- ldamodel2 %>% predict(test.transformed2)
 # Predicted probabilities of class membership.
-head(predictions2$posterior) 
+predictions2$posterior
 # Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
-head(predictions2$x) 
-
+predictions2$x
 # Model accuracy - 100% chance of correctly classifying the patients in its groups.
 mean(predictions2$class==test.transformed2$pex)
+
+### Removing complication variable
+## Variable complication is heavily influencing the prediction of these 6 individuals. We are removing it on the following model
+ldamodel3 <- lda(pex~., data = train.transformed2[, -40])
+ldamodel3
+plot(ldamodel3)
+# Make predictions
+predictions3 <- ldamodel3 %>% predict(test.transformed2[, -40])
+# Predicted probabilities of class membership.
+predictions3$posterior
+# Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
+predictions3$x
+# Model accuracy - 100% chance of correctly classifying the patients in its groups.
+mean(predictions3$class==test.transformed2$pex)
 
 #### t-test to evaluate whether the means are different on the SCORES variables###
 ### APACHE Score ####
