@@ -211,7 +211,7 @@ knn.train.data <- LDAdf[knn.train, -c(1, 41)]
 knn.test.data <- LDAdf[-knn.train, -c(1, 41)]
 
 knn.model1 <- train(pex~., data = knn.train.data, method = 'knn', # knn method for classification
-                    trControl = trainControl('cv', number = 20), # 10-fold cross validation
+                    trControl = trainControl('cv', number = 20), # 20-fold cross validation
                     preProcess = c('center', 'scale'), # Normalizing and centering the data
                     tuneLength = 50)
 plot(knn.model1)
