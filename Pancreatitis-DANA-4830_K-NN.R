@@ -172,9 +172,8 @@ predictions3$x
 mean(predictions3$class==test.transformed2$pex)
 
 
-
-transformed4 <- preproc.param %>% predict(LDAdf2[,-1])
 #### LDA on the entire dataset ####
+transformed4 <- preproc.param %>% predict(LDAdf2[,-1])
 # Fit the model
 ldamodel4 <- lda(pex~., data = transformed4[,-40])
 ldamodel4
@@ -197,5 +196,47 @@ fit.df <- cbind(LDAdf2$ID, LDAdf2$pex, fit.df)
 fit.df$misclassified <- ifelse(fit.df$PEX.Treatment > 0.5,
                                ifelse(fit.df$`LDAdf2$pex` == 'PEX Treatment', '', 'x'),
                                ifelse(fit.df$`LDAdf2$pex` == 'Standard Treatment', '', 'x'))
+fit.df$ldapredicted <- ifelse(fit.df$PEX.Treatment > 0.5, 'PEX Treatment', 'Standard Treatment')
+names(fit.df) <- c('ID', 'Original Treatment', 'LDA Pex %', 'LDA Standard %', 'Misclassified', 'LDA Predicted Treatment')
 fit.df # 6 individuals misclassified according to model
+lda.confusion.matrix <- table(fit.df[, c('Original Treatment', 'LDA Predicted Treatment')])
+lda.confusion.matrix
+
+
+#### KNN for Classification ####
+set.seed(123)
+knn.train <- LDAdf$pex %>%
+  createDataPartition(p = 0.8, list = FALSE)
+knn.train.data <- LDAdf[knn.train, -c(1, 41)]
+knn.test.data <- LDAdf[-knn.train, -c(1, 41)]
+
+knn.model1 <- train(pex~., data = knn.train.data, method = 'knn', # knn method for classification
+                    trControl = trainControl('cv', number = 20), # 10-fold cross validation
+                    preProcess = c('center', 'scale'), # Normalizing and centering the data
+                    tuneLength = 50)
+plot(knn.model1)
+knn.model1$results
+knn.model1$bestTune # Accuracy peak at k=31 neighbors
+knn.predictions1 <- knn.model1 %>% predict(knn.test.data)
+knn.predictions1
+# Prediction accuracy - 90.63% for test dataset
+mean(knn.predictions1==knn.test.data$pex)
+
+# Classification for the entire dataset
+knn.predictions2 <- knn.model1 %>% predict(LDAdf[, -c(1, 41)]) # Removing ID and complication variables
+# Prediction accuracy - 91.41% for the entire dataset
+mean(knn.predictions2==LDAdf$pex)
+
+# Fitted dataset analysis according to model
+fit.knn.df <- data.frame(LDAdf2$ID, LDAdf2$pex, knn.predictions2)
+names(fit.knn.df) <- c('ID', 'Original Treatment', 'KNN Predicted Treatment')
+fit.knn.df
+
+# Identifying misclassified individuals
+fit.knn.df$misclassified <- ifelse(fit.knn.df$`Original Treatment` == fit.knn.df$`KNN Predicted Treatment`, '', 'x')
+fit.knn.df # 20 individuals misclassified according to KNN model
+# Misclassified individuals according to KNN model:
+# 25, 26, 31, 46, 49, 51, 61, 62, 65, 72, 75, 88, 96, 107, 112, 115, 118, 121, 122, and 145
+knn.confusion.matrix <- table(fit.knn.df[, c('Original Treatment', 'KNN Predicted Treatment')])
+knn.confusion.matrix
 
