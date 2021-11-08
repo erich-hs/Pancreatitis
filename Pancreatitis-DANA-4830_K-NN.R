@@ -297,6 +297,27 @@ predictions3$x
 # Model accuracy - 100% chance of correctly classifying the patients in its groups.
 mean(predictions3$class==test.transformed2$pex)
 
+
+
+transformed4 <- preproc.param %>% predict(LDAdf2[,-1])
+
+# Fit the model
+ldamodel4 <- lda(pex~., data = transformed4[,-40])
+ldamodel4
+plot(ldamodel4)
+
+predictions4 <- ldamodel4 %>% predict(transformed4[,-40])
+round(predictions4$posterior, 3)
+predictions4$x
+mean(predictions4$class==transformed4$pex)
+
+fit.df <- data.frame(round(predictions4$posterior, 3))
+fit.df <- cbind(LDAdf2$ID, LDAdf2$pex, fit.df)
+fit.df$misclassified <- ifelse(fit.df$PEX.Treatment > 0.5,
+                               ifelse(fit.df$`LDAdf2$pex` == 'PEX Treatment', '', 'x'),
+                               ifelse(fit.df$`LDAdf2$pex` == 'Standard Treatment', '', 'x'))
+fit.df
+
 #### t-test to evaluate whether the means are different on the SCORES variables###
 ### APACHE Score ####
 ##Assumption 1: Are the Samples independent? Yes, the two treatments are independent of each other 
