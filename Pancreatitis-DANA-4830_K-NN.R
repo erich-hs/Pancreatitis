@@ -300,23 +300,30 @@ mean(predictions3$class==test.transformed2$pex)
 
 
 transformed4 <- preproc.param %>% predict(LDAdf2[,-1])
-
+#### LDA on the entire dataset ####
 # Fit the model
 ldamodel4 <- lda(pex~., data = transformed4[,-40])
 ldamodel4
 plot(ldamodel4)
 
+# Make predictions
 predictions4 <- ldamodel4 %>% predict(transformed4[,-40])
+# Predicted probabilities of class membership.
 round(predictions4$posterior, 3)
+# Linear discriminant - Shows the linear combination of predictor variables that are used to form the LDA decision rule
 predictions4$x
+# Dataset accuracy according to model - 96.32%
 mean(predictions4$class==transformed4$pex)
 
+# Fitted dataset analysis according to model
 fit.df <- data.frame(round(predictions4$posterior, 3))
 fit.df <- cbind(LDAdf2$ID, LDAdf2$pex, fit.df)
+
+# Identifying misclassified individuals
 fit.df$misclassified <- ifelse(fit.df$PEX.Treatment > 0.5,
                                ifelse(fit.df$`LDAdf2$pex` == 'PEX Treatment', '', 'x'),
                                ifelse(fit.df$`LDAdf2$pex` == 'Standard Treatment', '', 'x'))
-fit.df
+fit.df # 6 individuals misclassified according to model
 
 #### t-test to evaluate whether the means are different on the SCORES variables###
 ### APACHE Score ####
